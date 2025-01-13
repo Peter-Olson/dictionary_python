@@ -12,8 +12,9 @@
 """
 
 import itertools
+from collections import defaultdict
 
-DICTIONARY_FILE_NAME = "NWL2020_defs.txt"
+DICTIONARY_FILE_NAME = "NWL2023.txt"
 # Determines whether the end of a word has been reached
 RETRACE_WORD = False
 # Globals for Scrabble games (and Scrabble variants)
@@ -639,6 +640,44 @@ def _save_file(file_name, iterable):
     file.close()
 
 
+def _save_words_to_file(file_name, dct, use_defs=False):
+    """
+    Save the keys of a dictionary to a new file of the given name
+    :param file_name: The name of the new text file to make
+    :param dct: The name of the dictionary
+    :param use_defs: Include definitions if true
+    """
+    file = open(file_name, "w")
+    all_text = ""
+    for word in dct:
+        all_text += word
+        if use_defs:
+            all_text += " " + dct[word]
+        all_text += "\n"
+    all_text = all_text[:-1]
+    file.write(all_text)
+    file.close()
+
+
+def _save_adjacency_words_to_file(file_name, dct, use_defs=False):
+    """
+    Save the keys of a dictionary to a new file of the given name
+    :param file_name: The name of the new text file to make
+    :param dct: The name of the dictionary
+    :param use_defs: Include definitions if true
+    """
+    file = open(file_name, "w")
+    all_text = ""
+    for word in dct:
+        all_text += word + ": "
+        if use_defs:
+            all_text += " ".join(dct[word])
+        all_text += "\n"
+    all_text = all_text[:-2]
+    file.write(all_text)
+    file.close()
+
+
 def _find_prefixes_of_length(length):
     """
     Creates a dictionary from the default dictionary text file
@@ -859,6 +898,241 @@ def _create_2d_list(total_rows, total_cols, value=None):
     return [[value for _ in range(total_cols)] for _ in range(total_rows)]
 
 
+def _get_all_adjectives(word_dct):
+    """
+    Create a text file containing all of the adjectives in the given dictionary
+
+    :param word_dct: The Dictionary of the words and defs
+    """
+    adj_dct = word_dct.get_words_with_x_in_def("[adj")
+    _save_words_to_file("ADJECTIVE_LIST.txt", adj_dct, True)
+
+
+def _get_all_adverbs(word_dct):
+    """
+    Create a text file containing all of the adverbs in the given dictionary
+
+    :param word_dct: The Dictionary of the words and defs
+    """
+    adv_dct = word_dct.get_words_with_x_in_def("[adv")
+    _save_words_to_file("ADVERB_LIST.txt", adv_dct, True)
+
+
+def _get_all_articles(word_dct):
+    """
+    Create a text file containing all of the articles in the given dictionary
+
+    :param word_dct: The Dictionary of the words and defs
+    """
+    art_dct = word_dct.get_words_with_x_in_def("[art")
+    _save_words_to_file("ARTICLE_LIST.txt", art_dct, True)
+
+
+def _get_all_conjunctions(word_dct):
+    """
+    Create a text file containing all of the conjunctions in the given dictionary
+
+    :param word_dct: The Dictionary of the words and defs
+    """
+    conj_dct = word_dct.get_words_with_x_in_def("[conj")
+    _save_words_to_file("CONJUNCTION_LIST.txt", conj_dct, True)
+
+
+def _get_all_interjections(word_dct):
+    """
+    Create a text file containing all of the interjections in the given dictionary
+
+    :param word_dct: The Dictionary of the words and defs
+    """
+    interj_dct = word_dct.get_words_with_x_in_def("[interj")
+    _save_words_to_file("INTERJECTION_LIST.txt", interj_dct, True)
+
+
+def _get_all_nouns(word_dct):
+    """
+    Create a text file containing all of the nouns in the given dictionary
+
+    :param word_dct: The Dictionary of the words and defs
+    """
+    noun_dct = word_dct.get_words_with_x_in_def("[n")
+    _save_words_to_file("NOUN_LIST.txt", noun_dct, True)
+
+
+def _get_all_prepositions(word_dct):
+    """
+    Create a text file containing all of the prepositions in the given dictionary
+
+    :param word_dct: The Dictionary of the words and defs
+    """
+    prep_dct = word_dct.get_words_with_x_in_def("[prep")
+    _save_words_to_file("PREPOSITION_LIST.txt", prep_dct, True)
+
+
+def _get_all_pronouns(word_dct):
+    """
+    Create a text file containing all of the pronouns in the given dictionary
+
+    :param word_dct: The Dictionary of the words and defs
+    """
+    pronoun_dct = word_dct.get_words_with_x_in_def("[pron")
+    _save_words_to_file("PRONOUN_LIST.txt", pronoun_dct, True)
+
+
+def _get_all_verbs(word_dct):
+    """
+    Create a text file containing all of the verbs in the given dictionary
+
+    :param word_dct: The Dictionary of the words and defs
+    """
+    verb_dct = word_dct.get_words_with_x_in_def("[v")
+    _save_words_to_file("VERB_LIST.txt", verb_dct, True)
+
+
+def _create_adjacency_dct(word_dct):
+    """
+    Create an adjacency dictionary, whose definitions consist of all the words that contain the
+    given word in their definition.
+
+    Eg. For the entry JELLYFISH:
+
+        JELLYFISH: CNIDA, MEDUSA, ACALEPH, AEQUORIN, JELLYFISHES
+
+    :param word_dct: The Dictionary to use
+    """
+    new_dct = dict()
+    actual_dct = word_dct.get_dct()  # Convert the Dictionary object to a dict
+    for word in actual_dct:
+        words_found_dct = word_dct.get_words_with_x_in_def(word, False)
+        new_dct.update(words_found_dct)
+        print(words_found_dct)
+    _save_adjacency_words_to_file("ADJACENCY_NWL_2023.txt", new_dct, True)
+
+
+def _clean_up_adjacency_file(file_name):
+    """
+    A helper function for reformatting adjacency files created
+    from the _create_adjacency_dct(...) function
+
+    Removes ", " at the ends of entries
+
+    :param file_name: The name of the file to clean up
+    """
+    with open(file_name, 'r+') as f:
+        text = f.read()
+        words_list = text.split("\n")
+        edited_text = ""
+        for line in words_list:
+            line = line[:-2]
+            edited_text += line + "\n"
+        edited_text = edited_text[:-1]
+        f.seek(0)
+        f.write(edited_text)
+        f.truncate()
+
+
+def _alphabetize_file(file_name):
+    """
+    Alphabetize a file
+
+    :param file_name: The name of the file to reorder
+    """
+    with open(file_name, 'r+') as f:
+        text = f.readlines()
+        text.sort()
+        f.seek(0)
+        f.write("".join(text))
+
+
+def _alphabetize_adjacency_words(file_name):
+    """
+    Alphabetize the adjacency words for all entries within the
+    file. Generally speaking, many c and v words appear out of
+    order, at the end of the lists. This is related to c and v
+    words not having any valid 2-letter words and reading from
+    files that are sorted by length first and then alphabetically
+
+    :param file_name: The name of the file to sort
+    """
+    with open(file_name, 'r+') as f:
+        text = f.readlines()
+        new_text = ""
+        for line in text:
+            colon_index = line.index(":")
+            root_word = line[:colon_index].upper()
+            adj_words_str = line[colon_index + 1:]
+            adj_words_str = adj_words_str.strip()
+            if len(adj_words_str) <= 1:
+                new_text += root_word + ": \n"
+                continue
+            adj_words_list = adj_words_str.split(" ")
+            adj_words_list.sort()
+            adj_words_str = " ".join(adj_words_list)
+
+            new_text += root_word + ": " + adj_words_str + "\n"
+        new_text = new_text[:-1]
+        f.seek(0)
+        f.write(new_text)
+        f.truncate()
+
+
+def _remove_adjacency_subwords(adjacency_file_name):
+    """
+    Create a new adjacency dictionary file by removing all
+    subwords and zero adjacency words.
+
+    Eg. aals: -> [remove completely]
+        ...
+        aardvark: AARDVARKS ANTBEAR -> aardvark: ANTBEAR
+        ...
+        briefly: DIP NAP NOD REMARK VIGNETTE -> [no change]
+
+    :param adjacency_file_name: The name of the adjacency
+        dictionary file
+    """
+    # Get text
+    with open(adjacency_file_name, 'r') as f:
+        line_list = f.readlines()
+
+    # Edit lines
+    all_text = ""
+    for line in line_list:
+        colon_index = line.index(":")
+        root_word = line[:colon_index].upper()
+        adj_words_str = line[colon_index+1:]
+
+        # Remove any entries with no adjacency words
+        if len(adj_words_str) <= 2:
+            continue
+
+        # Remove adjacency words containing root word
+        adj_words_str = adj_words_str.strip()
+        adj_words_list = adj_words_str.split(" ")
+        new_adj_line = ""
+        for adj_word in adj_words_list:
+            if root_word not in adj_word:
+                new_adj_line += adj_word + " "
+
+        # Remove entries whose adjacency words all contain the
+        # root word
+        if new_adj_line == "":
+            continue
+
+        new_adj_line = new_adj_line[:-1] + "\n"
+        all_text += root_word + ": " + new_adj_line
+
+    # Write text to new file
+    new_file_name = ""
+    all_text = all_text[:-1]
+    if ".txt" in adjacency_file_name:
+        new_file_name += adjacency_file_name[:adjacency_file_name.index(".txt")]
+    else:
+        new_file_name += adjacency_file_name
+    new_file_name += "_NO_ROOT.txt"
+    file = open(new_file_name, "w")
+    file.write(all_text)
+    file.close()
+
+
 class Dictionary:
     """
     Dictionary objects are built on Trie data structures.
@@ -931,28 +1205,41 @@ class Dictionary:
         """
         return self.__dct.get_defn(word.upper())
 
-    def get_words_with_x_in_def(self, string):
+    def get_words_with_x_in_def(self, string, include_def=True):
         """
         Finds the list of words whose definitions contain
         a given string. Returns a dictionary of the words
         and their definitions
         :param string: The string to search the definitions
             for
+        :param include_def: True if the definition is included, false otherwise. If definitions are
+            included, each entry is the word-definition pair that the string was found in. If not
+            included, each key is the string and each value are the words that contain the string
+            in their definitions
         :return: dict A dictionary containing the words and
-            their definitions, whose definitions contain the
-            string
+            their definitions if definitions are included, whose definitions contain the
+            string, or if definitions are not included, a dictionary whose keys are the string, and
+            values are the words whose definitions contain that string
         """
         all_words = []
         def_list = []
         self.__dct.walk_trie_defs(self.__dct.root, "", all_words, def_list)
 
         dct = dict()
+        dct_lst = defaultdict(list)
         string = string.lower()
         for index in range(0, len(def_list)):
             if string in def_list[index]:
-                dct[all_words[index]] = def_list[index]
-
-        return dct
+                if include_def:
+                    dct[all_words[index]] = def_list[index]
+                else:
+                    dct_lst[string].append(all_words[index])
+        if include_def:
+            return dct
+        else:
+            if len(dct_lst) == 0:
+                dct_lst[string].append("")
+            return dct_lst
 
     def get_x_letter_words(self, length):
         """
@@ -1101,6 +1388,26 @@ class Dictionary:
         for word in word_list:
             word_score_dct[word] = Dictionary.get_word_score(word)
         return _sort_by_value(word_score_dct)
+
+    def get_dct(self):
+        """
+        Return a dict equivalent of this Dictionary object
+        """
+        word_list = []
+        def_list = []
+        if self.use_defs:
+            self.__dct.walk_trie_defs(self.__dct.root, "", word_list, def_list)
+        else:
+            self.__dct.walk_trie(self.__dct.root, "", word_list)
+
+        dct = dict()
+        for index in range(0, len(word_list)):
+            word = word_list[index]
+            if self.use_defs:
+                dct[word] = def_list[index]
+            else:
+                dct[word] = ""
+        return dct
 
     def print_dct(self):
         """
@@ -1639,7 +1946,14 @@ my_dictionary = Dictionary()
 # print("Eight letter word overlaps:", eight_letter_word_list_overlaps)
 # _find_overlaps(ten_letter_words_list)
 # _find_overlaps(two_letter_words_list, 4)
-# scrabble_board = Board(my_dictionary)
+# _get_all_verbs(my_dictionary)
+# _create_adjacency_dct(my_dictionary)
+# _clean_up_adjacency_file("ADJACENCY_NWL_2023.txt")
+# _alphabetize_file("ADJACENCY_NWL_2023.txt")
+# _remove_adjacency_subwords("ADJACENCY_NWL_2023.txt")
+# _alphabetize_adjacency_words("ADJACENCY_NWL_2023.txt")
+
+scrabble_board = Board(my_dictionary)
 # if scrabble_board.is_empty():
 #     print("Default board is empty")
 # print("Score of the word 'ZIGZAG':", scrabble_board.get_score("ZIGZAG"))
